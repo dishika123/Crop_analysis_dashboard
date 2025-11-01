@@ -1,0 +1,7 @@
+Season,Sowing Period,Harvesting Period
+Kharif,"['June', 'July']","['October', 'November']"
+Rabi,"['October', 'November', 'December']","['March', 'April']"
+Summer,"['February', 'March']","['May', 'June']"
+Winter,"['October', 'November']","['February', 'March']"
+Autumn,"['September', 'October']","['November', 'December']"
+Whole Year,"['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']","['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']"
