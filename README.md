@@ -10,6 +10,7 @@ A small collection of Streamlit dashboards, scripts and notebooks for exploring 
 - [Requirements](#requirements)
 - [Quick start (Windows PowerShell)](#quick-start-windows-powershell)
 - [Run the dashboards](#run-the-dashboards)
+- [CSV chatbot (app.py)](#csv-chatbot)
 - [Notebooks and scripts](#notebooks-and-scripts)
 - [Project structure](#project-structure)
 - [Notes & tips](#notes--tips)
@@ -75,21 +76,82 @@ Run the CSV-chat assistant (`app.py`) with Streamlit. Note: `app.py` expects an 
 streamlit run app.py
 ```
 
-app.py notes (Ollama):
+<a name="csv-chatbot"></a>
+## CSV chatbot (app.py) — detailed setup & CSV instructions
 
-- The app expects an Ollama server running locally and models pulled. By default it looks for `OLLAMA_URL` at `http://localhost:11434`.
-- To use the assistant, install and run Ollama and pull recommended models (example commands shown by the app):
+Yes — `app.py` implements a CSV-powered RAG/chat assistant. The following step-by-step instructions will get it running and show how to prepare your first CSV so you can test the chatbot quickly.
 
-	- Start Ollama (see Ollama docs): `ollama serve`
-	- Pull models used in the app, for example:
-		- `ollama pull llama3.1:8b`
-		- `ollama pull nomic-embed-text`
+1) Put your first CSV in the `data/` folder (highlighted — do this first)
 
-You can override the model and server via environment variables:
+- Create a folder named `data` in the project root if it doesn't exist:
 
-- `OLLAMA_URL` — Ollama server URL
-- `OLLAMA_CHAT_MODEL` — chat model name (default used in `app.py`)
-- `OLLAMA_EMBED_MODEL` — embedding model name
+```powershell
+md data
+```
+
+- Add a small sample CSV file to that folder so the app has something to index. Example path: `data/sample.csv`.
+
+Example minimal CSV content (save as `data/sample.csv`):
+
+```csv
+State,Crop,Year,ANNUAL,JUN,JUL,AUG,SEP,Production
+Karnataka,Rice,2019,800,50,200,300,250,1500000
+```
+
+Notes about CSVs the app accepts:
+- The app will discover files under the Data folder with extensions: `.csv`, `.tsv`, `.txt`, `.xlsx`, `.xls`.
+- There is no strict schema required. `app.py` will index every row and convert each row to a text chunk for retrieval. Single-column text files are also supported.
+- If your files have different encodings or non-standard separators, Streamlit's sidebar allows pointing to another folder or you can pre-convert files to CSV/Excel.
+
+2) Install dependencies and start Streamlit (PowerShell)
+
+```powershell
+# activate or create virtual environment (if not already done)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# run the app
+streamlit run app.py
+```
+
+3) Ollama setup (required for chat + embeddings)
+
+- `app.py` uses Ollama for both embeddings and chat. Ollama must be running and have the embedding and chat models pulled locally. By default the app looks for `OLLAMA_URL=http://localhost:11434`.
+- Example Ollama commands (run in a separate terminal following Ollama's install instructions):
+
+```powershell
+# start Ollama server (follow Ollama installation docs first)
+# ollama serve
+
+# pull models used by the app
+# ollama pull llama3.1:8b
+# ollama pull nomic-embed-text
+```
+
+Environment variables you can set (optional):
+
+- `OLLAMA_URL` — Ollama server URL (default: `http://localhost:11434`)
+- `OLLAMA_CHAT_MODEL` — chat model name (default in `app.py`)
+- `OLLAMA_EMBED_MODEL` — embedding model name (default in `app.py`)
+
+4) Using the app UI (sidebar controls)
+
+- Data folder: the sidebar contains a `Data folder` input (default: `./data`). If your CSVs are elsewhere, set the path there.
+- Rebuild index: click `Rebuild index` after adding or changing CSVs. The app will show the discovered files and the number of indexed rows.
+- Top K / Row limit: the sidebar lets you tune how many matching rows to retrieve and how many rows to index per file (useful for large files).
+
+5) Performance & tips
+
+- Indexing: `app.py` currently creates one embedding request per chunk (row). For many rows this can be slow and use a lot of memory — for production you may want to batch embeddings or persist the index to disk.
+- Use small sample files first to verify the pipeline (CSV discovery, indexing, Ollama responses) before indexing large datasets.
+- If Ollama is not available, I can help adapt the code to use another provider (OpenAI, local embedding server, etc.).
+
+6) What the assistant does when you ask a question
+
+- The app retrieves top-K similar rows (based on embeddings) and builds a short context that is passed to the chat model. The system prompt instructs the assistant to answer using only the CSV context and to cite file names / row indices when relevant.
+
+If you want, I can add a tiny `data/sample.csv` file to the repo as a working example and/or modify `app.py` to batch embeddings and persist the index — tell me which you'd prefer.
 
 ## Notebooks and scripts
 
